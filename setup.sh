@@ -31,10 +31,10 @@ nvim +PlugInstall +qall
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
 # Utilities and programs written in Rust
-cargo install cargo-edit
-cargo install alacritty
-cargo install exa
-cargo install ripgrep
+~/.cargo/bin/cargo install cargo-edit
+~/.cargo/bin/cargo install alacritty
+~/.cargo/bin/cargo install exa
+~/.cargo/bin/cargo install ripgrep
 
 # Docker
 sudo apt install \

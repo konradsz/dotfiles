@@ -36,6 +36,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 cargo install cargo-edit
 cargo install alacritty
 cargo install exa
+cargo install ripgrep
 
 # Docker
 sudo apt install \
@@ -62,6 +63,22 @@ mkdir -p ~/.config/i3
 cp ./i3/config ~/.config/i3/
 
 # Polybar
+sudo apt install build-essential cmake-data python3-sphinx \
+    libcairo2-dev libxcb1-dev libxcb-util0-dev libxcb-randr0-dev \
+    libxcb-composite0-dev python3-xcbgen xcb-proto libxcb-image0-dev \
+    libxcb-ewmh-dev libxcb-icccm4-dev libjsoncpp-dev -y
+sudo apt install fonts-noto-core -y
+git clone --recursive https://github.com/polybar/polybar polybar-repo
+cd polybar-repo
+mkdir -p build && cd build
+cmake ..
+make -j$(nproc)
+sudo make install
+cd ../..
+rm -rf polybar-repo
+mkdir -p ~/.config/polybar
+cp ./polybar/launch.sh ~/.config/polybar
+cp ./polybar/config ~/.config/polybar
 
 # Visual Code
 

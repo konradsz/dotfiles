@@ -1,0 +1,101 @@
+[colors]
+background = #222
+foreground = #eee
+foreground-alt = #888
+linecolor = #fba922
+bordercolor = #333
+accent = #e60053
+
+[settings]
+screenchange-reload = true
+
+[bar/main]
+;monitor = ${env:MONITOR:HDMI-0}
+
+background = ${colors.background}
+foreground = ${colors.foreground}
+border-bottom-color = ${colors.bordercolor}
+line-color = ${colors.linecolor}
+
+underline-size = 2
+overline-size = 2
+
+padding-right = 1
+module-margin = 1
+
+font-0 = "Noto Sans Mono:size=10;1"
+font-1 = "Noto Sans Mono:size=10;1"
+font-2 = "Noto Sans Symbols:size=10;1"
+font-3 = "Noto Sans Symbols2:size=10;1"
+
+width = 100%
+height = 28
+
+bottom = true
+
+modules-left = i3 xwindow
+modules-center =
+modules-right = memory cpu date
+
+[module/i3]
+type = internal/i3
+index-sort = true
+pin-workspaces = true
+wrapping-scroll = true
+enable-click = true
+enable-scroll = false
+
+format = <label-state> <label-mode>
+
+label-mode = %mode%
+label-mode-padding = 2
+label-mode-background = ${colors.accent}
+
+label-focused = %index%
+
+label-focused-background = #383838
+label-focused-foreground = #fff
+label-focused-overline = #cc333333
+label-focused-underline = #fba922
+label-focused-padding = 1
+
+label-unfocused = %index%
+label-unfocused-padding = 1
+
+label-visible = %index%
+
+[module/xwindow]
+type = internal/xwindow
+label = %title:0:30:...%
+
+[module/cpu]
+type = internal/cpu
+interval = 2
+format-prefix = "💻 "
+format-prefix-foreground = ${colors.foreground-alt}
+format-underline = #f90000
+label = %percentage:2%%
+
+[module/memory]
+type = internal/memory
+interval = 2
+format-prefix = "🗍 "
+format-prefix-foreground = ${colors.foreground-alt}
+format-underline = #4bffdc
+label = %percentage_used:2%%
+
+[module/date]
+type = internal/date
+interval = 5
+
+date = "%b %d"
+;date-alt = %a %b %d
+
+time = %H:%M
+;time-alt = %I:%M%p
+
+format-prefix =
+format-prefix-foreground = ${colors.foreground-alt}
+format-underline = #0a6cf5
+
+label = %time% %date%

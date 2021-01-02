@@ -1,9 +1,10 @@
 {
     "workbench.iconTheme": "material-icon-theme",
     "workbench.colorTheme": "Material Theme Darker High Contrast",
-    "workbench.tree.indent": 12,
     "telemetry.enableCrashReporter": false,
     "telemetry.enableTelemetry": false,
     "editor.formatOnSave": true,
-    "workbench.tree.renderIndentGuides": "always"
+    "workbench.tree.renderIndentGuides": "always",
+    "workbench.startupEditor": "newUntitledFile",
+    "workbench.tree.indent": 10
 }

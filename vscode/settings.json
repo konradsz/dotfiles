@@ -1,0 +1,8 @@
+{
+    "workbench.iconTheme": "material-icon-theme",
+    "workbench.colorTheme": "Material Theme Darker High Contrast",
+    "workbench.tree.indent": 12,
+    "telemetry.enableCrashReporter": false,
+    "telemetry.enableTelemetry": false,
+    "editor.formatOnSave": true
+}

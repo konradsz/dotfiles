@@ -1,11 +1,9 @@
 #!/bin/sh
 
 echo -n 'Enter your GIT name: '
-#read git_name
-git_name='Konrad Szymoniak'
+read git_name
 echo -n 'Enter your GIT email: '
-#read git_email
-git_email='szymoniak.konrad@gmail.com'
+read git_email
 
 sudo apt update
 sudo apt upgrade -y
@@ -80,7 +78,18 @@ mkdir -p ~/.config/polybar
 cp ./polybar/launch.sh ~/.config/polybar
 cp ./polybar/config ~/.config/polybar
 
-# Visual Code
+# Visual Studio Code
+wget -q https://packages.microsoft.com/keys/microsoft.asc -O- | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main"
+sudo apt install code
+code --install-extension matklad.rust-analyzer
+code --install-extension vadimcn.vscode-lldb
+code --install-extension serayuzgur.crates
+code --install-extension bungcip.better-toml
+code --install-extension equinusocio.vsc-material-theme
+code --install-extension pkief.material-icon-theme
+mkdir -p ~/.config/Code/User
+cp ./vscode/settings.json ~/.config/Code/User/
 
 # fish
 sudo apt-add-repository ppa:fish-shell/release-3 -y

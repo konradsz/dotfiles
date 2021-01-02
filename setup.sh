@@ -103,4 +103,4 @@ cp ./fish/config.fish ~/.config/fish/
 gsettings set org.gnome.desktop.lockdown disable-lock-screen true
 gsettings set org.gnome.desktop.session idle-delay $((30*60))
 
-sudo apt autoremove
+sudo apt autoremove -y

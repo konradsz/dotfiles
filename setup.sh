@@ -11,7 +11,10 @@ sudo apt upgrade -y
 # Basic dependencies
 sudo apt install curl g++ cmake libssl-dev pkg-config \
     libfreetype6-dev libfontconfig1-dev libxcb-xfixes0-dev \
-    python3 -y
+    python3 default-jre net-tools htop -y
+
+# fzf
+sudo apt install fzf -y
 
 # Git
 sudo apt install -y git
@@ -88,6 +91,10 @@ code --install-extension serayuzgur.crates
 code --install-extension bungcip.better-toml
 code --install-extension equinusocio.vsc-material-theme
 code --install-extension pkief.material-icon-theme
+code --install-extension tamasfe.even-better-toml
+code --install-extension shd101wyy.markdown-preview-enhanced 
+code --install-extension redhat.vscode-yaml
+code --install-extension vscodevim.vim
 mkdir -p ~/.config/Code/User
 cp ./vscode/settings.json ~/.config/Code/User/
 

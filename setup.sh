@@ -105,6 +105,7 @@ code --install-extension tamasfe.even-better-toml
 code --install-extension shd101wyy.markdown-preview-enhanced 
 code --install-extension redhat.vscode-yaml
 code --install-extension vscodevim.vim
+code --install-extension 2gua.rainbow-brackets
 mkdir -p ~/.config/Code/User
 cp ./vscode/settings.json ~/.config/Code/User/
 

@@ -1,29 +1,20 @@
 " Fish doesn't play all that well with others
 set shell=/bin/bash
-let mapleader = "\<Space>"
 
 filetype off
 
-" =============================================================================
-" # PLUGINS
-" =============================================================================
 call plug#begin()
-    " VIM enhancements
-    Plug 'ciaranm/securemodelines'
     Plug 'justinmk/vim-sneak'
 
-    " GUI enhancements
     Plug 'itchyny/lightline.vim'
     Plug 'andymass/vim-matchup'
-    Plug 'junegunn/rainbow_parentheses.vim'
+    Plug 'kien/rainbow_parentheses.vim'
     Plug 'chriskempson/base16-vim'
 
-    " Fuzzy finder
     Plug 'airblade/vim-rooter'
     Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
     Plug 'junegunn/fzf.vim'
 
-    " Semantic language support
     Plug 'neovim/nvim-lspconfig'
     Plug 'nvim-lua/lsp_extensions.nvim'
     Plug 'hrsh7th/cmp-nvim-lsp', {'branch': 'main'}
@@ -32,24 +23,27 @@ call plug#begin()
     Plug 'hrsh7th/nvim-cmp', {'branch': 'main'}
     Plug 'ray-x/lsp_signature.nvim'
 
-    " Only because nvim-cmp _requires_ snippets
     Plug 'hrsh7th/cmp-vsnip', {'branch': 'main'}
     Plug 'hrsh7th/vim-vsnip'
 
-    " Syntactic language support
     Plug 'cespare/vim-toml'
     Plug 'stephpy/vim-yaml'
     Plug 'rust-lang/rust.vim'
-    Plug 'rhysd/vim-clang-format'
-    Plug 'dag/vim-fish'
     Plug 'godlygeek/tabular'
     Plug 'plasticboy/vim-markdown'
+    function! UpdateRemotePlugins(...)
+      " Needed to refresh runtime files
+      let &rtp=&rtp
+      UpdateRemotePlugins
+    endfunction
+
+    Plug 'gelguy/wilder.nvim', { 'do': function('UpdateRemotePlugins') }
 call plug#end()
 
-if has('nvim')
-    set inccommand=nosplit
-    noremap <C-q> :confirm qall<CR>
-end
+call wilder#setup({'modes': [':', '/', '?']})
+call wilder#set_option('renderer', wilder#popupmenu_renderer({
+      \ 'highlighter': wilder#basic_highlighter(),
+      \ }))
 
 " deal with colors
 if !has('gui_running')
@@ -104,11 +98,11 @@ cmp.setup({
 })
 
 -- Enable completing paths in :
-cmp.setup.cmdline(':', {
-  sources = cmp.config.sources({
-    { name = 'path' }
-  })
-})
+--cmp.setup.cmdline(':', {
+  --sources = cmp.config.sources({
+    --{ name = 'path' }
+  --})
+--})
 
 -- Setup lspconfig.
 local on_attach = function(client, bufnr)
@@ -158,9 +152,9 @@ lspconfig.rust_analyzer.setup {
         allFeatures = true,
       },
       completion = {
-postfix = {
- enable = false,
-},
+        postfix = {
+         enable = false,
+        },
       },
     },
   },
@@ -176,20 +170,6 @@ vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
 )
 END
 
-" Plugin settings
-let g:secure_modelines_allowed_items = [
-                \ "textwidth",   "tw",
-                \ "softtabstop", "sts",
-                \ "tabstop",     "ts",
-                \ "shiftwidth",  "sw",
-                \ "expandtab",   "et",   "noexpandtab", "noet",
-                \ "filetype",    "ft",
-                \ "foldmethod",  "fdm",
-                \ "readonly",    "ro",   "noreadonly", "noro",
-                \ "rightleft",   "rl",   "norightleft", "norl",
-                \ "colorcolumn"
-                \ ]
-
 " Lightline
 let g:lightline = {
       \ 'active': {
@@ -202,6 +182,7 @@ let g:lightline = {
       \ 'component_function': {
       \   'filename': 'LightlineFilename'
       \ },
+      \ 'colorscheme': 'darcula'
       \ }
 function! LightlineFilename()
   return expand('%:t') !=# '' ? @% : '[No Name]'
@@ -209,10 +190,8 @@ endfunction
 
 " Open hotkeys
 map <C-p> :Files<CR>
+map <C-b> :Buffers<CR>
 nmap <leader>; :Buffers<CR>
-
-" Quick-save
-nmap <leader>w :w<CR>
 
 " rust
 let g:rustfmt_autosave = 1
@@ -239,7 +218,7 @@ set autoindent
 set timeoutlen=300 " http://stackoverflow.com/questions/2158516/delay-before-o-opens-a-new-line
 set encoding=utf-8
 set scrolloff=2
-set noshowmode
+set noshowmode " no -- INSERT -- on cmdline
 set hidden
 set nowrap
 set nojoinspaces
@@ -296,16 +275,12 @@ nnoremap <silent> * *zz
 nnoremap <silent> # #zz
 nnoremap <silent> g* g*zz
 
-" Very magic by default
-nnoremap ? ?\v
-cnoremap %s/ %sm/
-
 " =============================================================================
 " # GUI settings
 " =============================================================================
+set inccommand=nosplit
 set guioptions-=T " Remove toolbar
 set vb t_vb= " No more beeps
-set backspace=2 " Backspace over newlines
 set nofoldenable
 set ttyfast
 " https://github.com/vim/vim/issues/1735#issuecomment-383353563
@@ -334,11 +309,6 @@ set shortmess+=c " don't give |ins-completion-menu| messages.
 vnoremap <C-h> :nohlsearch<cr>
 nnoremap <C-h> :nohlsearch<cr>
 
-" Suspend with Ctrl+f
-inoremap <C-f> :sus<cr>
-vnoremap <C-f> :sus<cr>
-nnoremap <C-f> :sus<cr>
-
 " Jump to start and end of line using the home row keys
 map H ^
 map L $
@@ -351,7 +321,7 @@ noremap <leader>c :w !xsel -ib<cr><cr>
 
 " <leader>s for Rg search
 noremap <leader>s :Rg
-let g:fzf_layout = { 'down': '~20%' }
+let g:fzf_layout = { 'down': '~25%' }
 command! -bang -nargs=* Rg
   \ call fzf#vim#grep(
   \   'rg --column --line-number --no-heading --color=always '.shellescape(<q-args>), 1,
@@ -417,3 +387,9 @@ au TextYankPost * silent! lua vim.highlight.on_yank()
 " Enable type inlay hints
 autocmd CursorHold,CursorHoldI *.rs :lua require'lsp_extensions'.inlay_hints{ only_current_line = true }
 
+" Rainbow Parentheses
+au Syntax * RainbowParenthesesLoadRound
+au Syntax * RainbowParenthesesLoadSquare
+au Syntax * RainbowParenthesesLoadBraces
+au Syntax * RainbowParenthesesLoadChevrons
+map <F1> :RainbowParenthesesToggle<cr>

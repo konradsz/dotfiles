@@ -6,10 +6,11 @@ filetype off
 call plug#begin()
     Plug 'justinmk/vim-sneak'
 
-    Plug 'itchyny/lightline.vim'
-    Plug 'andymass/vim-matchup'
+    Plug 'noib3/nvim-cokeline',
+    Plug 'nvim-lualine/lualine.nvim'
     Plug 'kien/rainbow_parentheses.vim'
     Plug 'chriskempson/base16-vim'
+    Plug 'numToStr/Comment.nvim'
 
     Plug 'airblade/vim-rooter'
     Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
@@ -29,33 +30,29 @@ call plug#begin()
     Plug 'cespare/vim-toml'
     Plug 'stephpy/vim-yaml'
     Plug 'rust-lang/rust.vim'
-    Plug 'godlygeek/tabular'
     Plug 'plasticboy/vim-markdown'
+
     function! UpdateRemotePlugins(...)
       " Needed to refresh runtime files
       let &rtp=&rtp
       UpdateRemotePlugins
     endfunction
-
     Plug 'gelguy/wilder.nvim', { 'do': function('UpdateRemotePlugins') }
+
+    Plug 'kyazdani42/nvim-tree.lua'
+    Plug 'kyazdani42/nvim-web-devicons'
 call plug#end()
 
 call wilder#setup({'modes': [':', '/', '?']})
-call wilder#set_option('renderer', wilder#popupmenu_renderer({
+call wilder#set_option('renderer', wilder#wildmenu_renderer({
       \ 'highlighter': wilder#basic_highlighter(),
       \ }))
 
-" deal with colors
-if !has('gui_running')
-  set t_Co=256
-endif
-if (match($TERM, "-256color") != -1) && (match($TERM, "screen-256color") == -1)
-  " screen does not (yet) support truecolor
-  set termguicolors
-endif
+set termguicolors
 set background=dark
 let base16colorspace=256
 colorscheme base16-gruvbox-dark-hard
+
 syntax on
 hi Normal ctermbg=NONE
 
@@ -72,6 +69,56 @@ call Base16hi("LspSignatureActiveParameter", g:base16_gui05, g:base16_gui03, g:b
 
 " LSP configuration
 lua << END
+require('Comment').setup()
+
+require('cokeline').setup({
+  sidebar = {
+    filetype = 'NvimTree',
+    components = {
+      {
+        text = '  NvimTree',
+        style = 'bold',
+      },
+    },
+  },
+})
+
+require('nvim-tree').setup {
+  view = {
+    width = 40
+  }
+}
+
+require('lualine').setup {
+  options = {
+    icons_enabled = true,
+    theme = 'gruvbox-material',
+    component_separators = { left = '', right = ''},
+    section_separators = { left = '', right = ''},
+    disabled_filetypes = {},
+    always_divide_middle = true,
+    globalstatus = false,
+  },
+  sections = {
+    lualine_a = {'mode'},
+    lualine_b = {'branch', 'diff', 'diagnostics'},
+    lualine_c = {'filename'},
+    lualine_x = {'encoding', 'filetype'},
+    lualine_y = {'progress'},
+    lualine_z = {'location'}
+  },
+  inactive_sections = {
+    lualine_a = {},
+    lualine_b = {},
+    lualine_c = {'filename'},
+    lualine_x = {'location'},
+    lualine_y = {},
+    lualine_z = {}
+  },
+  tabline = {},
+  extensions = {'nvim-tree'}
+}
+
 local cmp = require'cmp'
 
 local lspconfig = require'lspconfig'
@@ -96,13 +143,6 @@ cmp.setup({
     ghost_text = true,
   },
 })
-
--- Enable completing paths in :
---cmp.setup.cmdline(':', {
-  --sources = cmp.config.sources({
-    --{ name = 'path' }
-  --})
---})
 
 -- Setup lspconfig.
 local on_attach = function(client, bufnr)
@@ -132,12 +172,12 @@ local on_attach = function(client, bufnr)
   buf_set_keymap("n", "<space>f", "<cmd>lua vim.lsp.buf.formatting()<CR>", opts)
 
   -- Get signatures (and _only_ signatures) when in argument lists.
-  require "lsp_signature".on_attach({
-    doc_lines = 0,
-    handler_opts = {
-      border = "none"
-    },
-  })
+  --require "lsp_signature".on_attach({
+    --doc_lines = 0,
+    --handler_opts = {
+      --border = "none"
+    --},
+  --})
 end
 
 local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
@@ -170,24 +210,6 @@ vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
 )
 END
 
-" Lightline
-let g:lightline = {
-      \ 'active': {
-      \   'left': [ [ 'mode', 'paste' ],
-      \             [ 'readonly', 'filename', 'modified' ] ],
-      \   'right': [ [ 'lineinfo' ],
-      \              [ 'percent' ],
-      \              [ 'fileencoding', 'filetype' ] ],
-      \ },
-      \ 'component_function': {
-      \   'filename': 'LightlineFilename'
-      \ },
-      \ 'colorscheme': 'darcula'
-      \ }
-function! LightlineFilename()
-  return expand('%:t') !=# '' ? @% : '[No Name]'
-endfunction
-
 " Open hotkeys
 map <C-p> :Files<CR>
 map <C-b> :Buffers<CR>
@@ -216,9 +238,10 @@ set updatetime=300
 filetype plugin indent on
 set autoindent
 set timeoutlen=300 " http://stackoverflow.com/questions/2158516/delay-before-o-opens-a-new-line
-set encoding=utf-8
+"set encoding=utf-8
 set scrolloff=2
-set noshowmode " no -- INSERT -- on cmdline
+" no -- INSERT -- on cmdline
+set noshowmode
 set hidden
 set nowrap
 set nojoinspaces
@@ -226,9 +249,7 @@ let g:sneak#s_next = 1
 let g:vim_markdown_new_list_item_indent = 0
 let g:vim_markdown_auto_insert_bullets = 0
 let g:vim_markdown_frontmatter = 1
-set printfont=:h10
-set printencoding=utf-8
-set printoptions=paper:letter
+
 " Always draw sign column. Prevent buffer moving when adding/deleting sign.
 set signcolumn=yes
 
@@ -293,13 +314,9 @@ set diffopt+=iwhite " No whitespace in vimdiff
 " Make diffing better: https://vimways.org/2018/the-power-of-diff/
 set diffopt+=algorithm:patience
 set diffopt+=indent-heuristic
-set colorcolumn=80 " and give me a colored column
 set showcmd " Show (partial) command in status line.
 set mouse=a " Enable mouse usage (all modes) in terminals
 set shortmess+=c " don't give |ins-completion-menu| messages.
-
-" Show those damn hidden characters
-" Verbose: set listchars=nbsp:¬¨,eol:¬∂,extends:¬Ľ,precedes:¬ę,trail:‚ÄĘ
 
 " =============================================================================
 " # Keyboard shortcuts
@@ -363,13 +380,13 @@ nnoremap <leader>, :set invlist<cr>
 " <leader>q shows stats
 nnoremap <leader>q g<c-g>
 
-" Keymap for replacing up to next _ or -
-noremap <leader>m ct_
-
 " I can type :help on my own, thanks.
 map <F1> <Esc>
 imap <F1> <Esc>
 
+" Ctrl+/ to comment out lines
+nmap <C-_> gcc
+vmap <C-_> gc
 
 " =============================================================================
 " # Autocommands
@@ -378,18 +395,21 @@ imap <F1> <Esc>
 " Leave paste mode when leaving insert mode
 autocmd InsertLeave * set nopaste
 
-" Follow Rust code style rules
-au Filetype rust set colorcolumn=100
-
 " Highlight yanked text
-au TextYankPost * silent! lua vim.highlight.on_yank()
+autocmd TextYankPost * silent! lua vim.highlight.on_yank()
 
 " Enable type inlay hints
 autocmd CursorHold,CursorHoldI *.rs :lua require'lsp_extensions'.inlay_hints{ only_current_line = true }
 
 " Rainbow Parentheses
-au Syntax * RainbowParenthesesLoadRound
-au Syntax * RainbowParenthesesLoadSquare
-au Syntax * RainbowParenthesesLoadBraces
-au Syntax * RainbowParenthesesLoadChevrons
+autocmd Syntax * RainbowParenthesesLoadRound
+autocmd Syntax * RainbowParenthesesLoadSquare
+autocmd Syntax * RainbowParenthesesLoadBraces
+autocmd Syntax * RainbowParenthesesLoadChevrons
 map <F1> :RainbowParenthesesToggle<cr>
+
+" Toggle NvimTree when entering Vim
+autocmd VimEnter * NvimTreeToggle
+
+" :q closes all buffers
+ca q qall

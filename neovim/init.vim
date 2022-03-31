@@ -1,46 +1,57 @@
 " Fish doesn't play all that well with others
 set shell=/bin/bash
 
+syntax on
 filetype off
 
 call plug#begin()
     Plug 'justinmk/vim-sneak'
-
-    Plug 'noib3/nvim-cokeline',
-    Plug 'nvim-lualine/lualine.nvim'
-    Plug 'kien/rainbow_parentheses.vim'
     Plug 'chriskempson/base16-vim'
+    Plug 'kien/rainbow_parentheses.vim'
     Plug 'numToStr/Comment.nvim'
-
-    Plug 'airblade/vim-rooter'
-    Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
-    Plug 'junegunn/fzf.vim'
-
-    Plug 'neovim/nvim-lspconfig'
-    Plug 'nvim-lua/lsp_extensions.nvim'
-    Plug 'hrsh7th/cmp-nvim-lsp', {'branch': 'main'}
-    Plug 'hrsh7th/cmp-buffer', {'branch': 'main'}
-    Plug 'hrsh7th/cmp-path', {'branch': 'main'}
-    Plug 'hrsh7th/nvim-cmp', {'branch': 'main'}
-    Plug 'ray-x/lsp_signature.nvim'
-
-    Plug 'hrsh7th/cmp-vsnip', {'branch': 'main'}
-    Plug 'hrsh7th/vim-vsnip'
-
-    Plug 'cespare/vim-toml'
-    Plug 'stephpy/vim-yaml'
-    Plug 'rust-lang/rust.vim'
-    Plug 'plasticboy/vim-markdown'
+    Plug 'nvim-lualine/lualine.nvim'
+    Plug 'kyazdani42/nvim-tree.lua'
+    Plug 'kyazdani42/nvim-web-devicons'
+    Plug 'vim-scripts/delimitMate.vim'
+    Plug 'lukas-reineke/indent-blankline.nvim'
+    Plug 'noib3/nvim-cokeline'    
+    Plug 'folke/which-key.nvim'
 
     function! UpdateRemotePlugins(...)
       " Needed to refresh runtime files
       let &rtp=&rtp
       UpdateRemotePlugins
     endfunction
-    Plug 'gelguy/wilder.nvim', { 'do': function('UpdateRemotePlugins') }
+    Plug 'gelguy/wilder.nvim', { 'do': function('UpdateRemotePlugins') }    
+    
+    Plug 'neovim/nvim-lspconfig'
 
-    Plug 'kyazdani42/nvim-tree.lua'
-    Plug 'kyazdani42/nvim-web-devicons'
+    " Completion framework
+    Plug 'hrsh7th/nvim-cmp'
+
+    " LSP completion source for nvim-cmp
+    Plug 'hrsh7th/cmp-nvim-lsp'
+
+    " Snippet completion source for nvim-cmp
+    Plug 'hrsh7th/cmp-vsnip'
+
+    " Other usefull completion sources
+    Plug 'hrsh7th/cmp-path'
+    Plug 'hrsh7th/cmp-buffer'
+
+    " See hrsh7th's other plugins for more completion sources!
+
+    " To enable more of the features of rust-analyzer, such as inlay hints and more!
+    Plug 'simrat39/rust-tools.nvim'
+
+    " Snippet engine
+    Plug 'hrsh7th/vim-vsnip'
+
+    " Fuzzy finder
+    " Optional
+    Plug 'nvim-lua/popup.nvim'
+    Plug 'nvim-lua/plenary.nvim'
+    Plug 'nvim-telescope/telescope.nvim'
 call plug#end()
 
 call wilder#setup({'modes': [':', '/', '?']})
@@ -48,46 +59,159 @@ call wilder#set_option('renderer', wilder#wildmenu_renderer({
       \ 'highlighter': wilder#basic_highlighter(),
       \ }))
 
-set termguicolors
-set background=dark
-let base16colorspace=256
-colorscheme base16-gruvbox-dark-hard
+" Configure LSP through rust-tools.nvim plugin.
+" rust-tools will configure and enable certain LSP features for us.
+" See https://github.com/simrat39/rust-tools.nvim#configuration
+lua <<EOF
+local nvim_lsp = require'lspconfig'
 
-syntax on
-hi Normal ctermbg=NONE
+require("which-key").setup {
+}
 
-" Customize the highlight a bit.
-" Make comments more prominent -- they are important.
-call Base16hi("Comment", g:base16_gui09, "", g:base16_cterm09, "", "", "")
-" Make it clearly visible which argument we're at.
-call Base16hi("LspSignatureActiveParameter", g:base16_gui05, g:base16_gui03, g:base16_cterm05, g:base16_cterm03, "bold", "")
+local opts = {
+    tools = { -- rust-tools options
+        autoSetHints = true,
+        hover_with_actions = true,
+        inlay_hints = {
+            show_parameter_hints = false,
+            parameter_hints_prefix = "",
+            other_hints_prefix = "",
+        },
+    },
 
-" Would be nice to customize the highlighting of warnings and the like to make
-" them less glaring. But alas
-" https://github.com/nvim-lua/lsp_extensions.nvim/issues/21
-" call Base16hi("CocHintSign", g:base16_gui03, "", g:base16_cterm03, "", "", "")
+    -- all the opts to send to nvim-lspconfig
+    -- these override the defaults set by rust-tools.nvim
+    -- see https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#rust_analyzer
+    server = {
+        -- on_attach is a callback called when the language server attachs to the buffer
+        -- on_attach = on_attach,
+        settings = {
+            -- to enable rust-analyzer settings visit:
+            -- https://github.com/rust-analyzer/rust-analyzer/blob/master/docs/user/generated_config.adoc
+            ["rust-analyzer"] = {
+                -- enable clippy on save
+                checkOnSave = {
+                    command = "clippy"
+                },
+                completion = {
+                    postfix = {
+                        enable = false,
+                    }
+                }
+            }
+        }
+    },
+}
 
-" LSP configuration
-lua << END
+require('rust-tools').setup(opts)
+
+local cmp = require'cmp'
+cmp.setup({
+  -- Enable LSP snippets
+  snippet = {
+    expand = function(args)
+        vim.fn["vsnip#anonymous"](args.body)
+    end,
+  },
+  mapping = {
+    ['<C-p>'] = cmp.mapping.select_prev_item(),
+    ['<C-n>'] = cmp.mapping.select_next_item(),
+    ['<C-d>'] = cmp.mapping.scroll_docs(-4),
+    ['<C-f>'] = cmp.mapping.scroll_docs(4),
+    ['<C-Space>'] = cmp.mapping.complete(),
+    ['<C-e>'] = cmp.mapping.close(),
+    -- Tab immediately completes. C-n/C-p to select.
+    ['<Tab>'] = cmp.mapping.confirm({ select = true })    
+  },
+
+  -- Installed sources
+  sources = {
+    { name = 'nvim_lsp' },
+    --{ name = 'vsnip' },
+    { name = 'path' },
+    --{ name = 'buffer' },
+  },
+})
+
 require('Comment').setup()
+
+local get_hex = require('cokeline/utils').get_hex
 
 require('cokeline').setup({
   sidebar = {
     filetype = 'NvimTree',
     components = {
       {
-        text = '  NvimTree',
-        style = 'bold',
+        text = '',
       },
     },
   },
-})
+  default_hl = {
+    fg = function(buffer)
+      return
+        buffer.is_focused
+        and get_hex('Normal', 'fg')
+         or get_hex('Comment', 'fg')
+    end,
+    bg = 'NONE',
+  },
 
-require('nvim-tree').setup {
-  view = {
-    width = 40
-  }
-}
+  components = {
+    {
+      text = function(buffer) return (buffer.index ~= 1) and '▏' or '' end,
+      fg = get_hex('Normal', 'fg')
+    },
+    {
+      text = function(buffer) return '    ' .. buffer.devicon.icon end,
+      fg = function(buffer) return buffer.devicon.color end,
+    },
+    {
+      text = function(buffer) return buffer.filename .. ' ' end,
+      style = function(buffer) return buffer.is_focused and 'bold' or nil end,
+    },
+    {
+      text = function(buffer)
+        return buffer.is_modified and '• ' or '  '
+      end,
+      fg = function(buffer)
+        return buffer.is_focused and 'bold' or nil
+      end,
+    },
+    {
+      text = '',
+      delete_buffer_on_left_click = true,
+    },
+    {
+      text = '  ',
+    },
+  },
+})
+--require('cokeline').setup({
+--  sidebar = {
+--    filetype = 'NvimTree',
+--    components = {
+--      {
+--        text = '  NvimTree',
+--        style = 'bold',
+--      },
+--    },
+--  },
+--})
+
+require('nvim-tree').setup({
+	diagnostics = {
+		enable = true,
+		icons = {
+			hint = "",
+			info = "",
+			warning = "",
+			error = "",
+		},
+	},
+	view = {
+		width = 45,
+	}
+})
 
 require('lualine').setup {
   options = {
@@ -119,136 +243,34 @@ require('lualine').setup {
   extensions = {'nvim-tree'}
 }
 
-local cmp = require'cmp'
+EOF
 
-local lspconfig = require'lspconfig'
-cmp.setup({
-  snippet = {
-    -- REQUIRED by nvim-cmp. get rid of it once we can
-    expand = function(args)
-      vim.fn["vsnip#anonymous"](args.body)
-    end,
-  },
-  mapping = {
-    -- Tab immediately completes. C-n/C-p to select.
-    ['<Tab>'] = cmp.mapping.confirm({ select = true })
-  },
-  sources = cmp.config.sources({
-    -- TODO: currently snippets from lsp end up getting prioritized -- stop that!
-    { name = 'nvim_lsp' },
-  }, {
-    { name = 'path' },
-  }),
-  experimental = {
-    ghost_text = true,
-  },
-})
+" Colors!
+set termguicolors
+set background=dark
+let base16colorspace=256
+colorscheme base16-gruvbox-dark-hard
 
--- Setup lspconfig.
-local on_attach = function(client, bufnr)
-  local function buf_set_keymap(...) vim.api.nvim_buf_set_keymap(bufnr, ...) end
-  local function buf_set_option(...) vim.api.nvim_buf_set_option(bufnr, ...) end
+" Customize the highlight a bit.
+" Make it clearly visible which argument we're at.
+call Base16hi("LspSignatureActiveParameter", g:base16_gui05, g:base16_gui03, g:base16_cterm05, g:base16_cterm03, "bold", "")
 
-  --Enable completion triggered by <c-x><c-o>
-  buf_set_option('omnifunc', 'v:lua.vim.lsp.omnifunc')
-
-  -- Mappings.
-  local opts = { noremap=true, silent=true }
-
-  -- See `:help vim.lsp.*` for documentation on any of the below functions
-  buf_set_keymap('n', 'gD', '<Cmd>lua vim.lsp.buf.declaration()<CR>', opts)
-  buf_set_keymap('n', 'gd', '<Cmd>lua vim.lsp.buf.definition()<CR>', opts)
-  buf_set_keymap('n', 'K', '<Cmd>lua vim.lsp.buf.hover()<CR>', opts)
-  buf_set_keymap('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<CR>', opts)
-  buf_set_keymap('n', '<C-k>', '<cmd>lua vim.lsp.buf.signature_help()<CR>', opts)
-  buf_set_keymap('n', '<space>D', '<cmd>lua vim.lsp.buf.type_definition()<CR>', opts)
-  buf_set_keymap('n', '<space>r', '<cmd>lua vim.lsp.buf.rename()<CR>', opts)
-  buf_set_keymap('n', '<space>a', '<cmd>lua vim.lsp.buf.code_action()<CR>', opts)
-  buf_set_keymap('n', 'gr', '<cmd>lua vim.lsp.buf.references()<CR>', opts)
-  buf_set_keymap('n', '<space>e', '<cmd>lua vim.diagnostic.open_float()<CR>', opts)
-  buf_set_keymap('n', '[d', '<cmd>lua vim.diagnostic.goto_prev()<CR>', opts)
-  buf_set_keymap('n', ']d', '<cmd>lua vim.diagnostic.goto_next()<CR>', opts)
-  buf_set_keymap('n', '<space>q', '<cmd>lua vim.diagnostic.set_loclist()<CR>', opts)
-  buf_set_keymap("n", "<space>f", "<cmd>lua vim.lsp.buf.formatting()<CR>", opts)
-
-  -- Get signatures (and _only_ signatures) when in argument lists.
-  --require "lsp_signature".on_attach({
-    --doc_lines = 0,
-    --handler_opts = {
-      --border = "none"
-    --},
-  --})
-end
-
-local capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
-lspconfig.rust_analyzer.setup {
-  on_attach = on_attach,
-  flags = {
-    debounce_text_changes = 150,
-  },
-  settings = {
-    ["rust-analyzer"] = {
-      cargo = {
-        allFeatures = true,
-      },
-      completion = {
-        postfix = {
-         enable = false,
-        },
-      },
-    },
-  },
-  capabilities = capabilities,
-}
-
-vim.lsp.handlers["textDocument/publishDiagnostics"] = vim.lsp.with(
-  vim.lsp.diagnostic.on_publish_diagnostics, {
-    virtual_text = true,
-    signs = true,
-    update_in_insert = true,
-  }
-)
-END
-
-" Open hotkeys
-map <C-p> :Files<CR>
-map <C-b> :Buffers<CR>
-nmap <leader>; :Buffers<CR>
-
-" rust
-let g:rustfmt_autosave = 1
-let g:rustfmt_emit_files = 1
-let g:rustfmt_fail_silently = 0
-let g:rust_clip_command = 'xclip -selection clipboard'
-
-" Completion
-" Better completion
-" menuone: popup even when there's only one match
-" noinsert: Do not insert text until a selection is made
-" noselect: Do not select, force user to select one from the menu
+set mouse=a
 set completeopt=menuone,noinsert,noselect
-" Better display for messages
-set cmdheight=1
-" You will have bad experience for diagnostic messages when it's default 4000.
-set updatetime=300
+set shortmess+=c " Avoid showing extra messages when using completion
+set inccommand=nosplit
+set vb t_vb= " No more beeps
+set nofoldenable
+set ttyfast " https://github.com/vim/vim/issues/1735#issuecomment-383353563
+set synmaxcol=500
+set laststatus=2 " Always display status line
+set relativenumber " Relative line numbers
+set number " Also show current absolute line
+set showcmd " Show (partial) command in status line
+set scrolloff=2
 
-" =============================================================================
-" # Editor settings
-" =============================================================================
 filetype plugin indent on
 set autoindent
-set timeoutlen=300 " http://stackoverflow.com/questions/2158516/delay-before-o-opens-a-new-line
-"set encoding=utf-8
-set scrolloff=2
-" no -- INSERT -- on cmdline
-set noshowmode
-set hidden
-set nowrap
-set nojoinspaces
-let g:sneak#s_next = 1
-let g:vim_markdown_new_list_item_indent = 0
-let g:vim_markdown_auto_insert_bullets = 0
-let g:vim_markdown_frontmatter = 1
 
 " Always draw sign column. Prevent buffer moving when adding/deleting sign.
 set signcolumn=yes
@@ -256,10 +278,6 @@ set signcolumn=yes
 " Sane splits
 set splitright
 set splitbelow
-
-" Permanent undo
-set undodir=~/.vimdid
-set undofile
 
 " Decent wildmenu
 set wildmenu
@@ -289,6 +307,29 @@ set incsearch
 set ignorecase
 set smartcase
 
+set noshowmode " no -- INSERT -- on cmdline
+
+" rust
+let g:rustfmt_autosave = 1
+let g:rustfmt_emit_files = 1
+let g:rustfmt_fail_silently = 0
+
+let mapleader=" "
+
+" Code navigation shortcuts
+nnoremap <silent> <c-]> <cmd>lua vim.lsp.buf.definition()<CR>
+nnoremap <silent> K     <cmd>lua vim.lsp.buf.hover()<CR>
+nnoremap <silent> gD    <cmd>lua vim.lsp.buf.implementation()<CR>
+nnoremap <silent> <c-k> <cmd>lua vim.lsp.buf.signature_help()<CR>
+nnoremap <silent> 1gD   <cmd>lua vim.lsp.buf.type_definition()<CR>
+nnoremap <silent> gr    <cmd>lua vim.lsp.buf.references()<CR>
+nnoremap <silent> g0    <cmd>lua vim.lsp.buf.document_symbol()<CR>
+nnoremap <silent> gW    <cmd>lua vim.lsp.buf.workspace_symbol()<CR>
+nnoremap <silent> gd    <cmd>lua vim.lsp.buf.definition()<CR>
+nnoremap <silent> ga    <cmd>lua vim.lsp.buf.code_action()<CR>
+nnoremap <silent> g[ <cmd>lua vim.diagnostic.goto_prev()<CR>
+nnoremap <silent> g] <cmd>lua vim.diagnostic.goto_next()<CR>
+
 " Search results centered please
 nnoremap <silent> n nzz
 nnoremap <silent> N Nzz
@@ -296,70 +337,14 @@ nnoremap <silent> * *zz
 nnoremap <silent> # #zz
 nnoremap <silent> g* g*zz
 
-" =============================================================================
-" # GUI settings
-" =============================================================================
-set inccommand=nosplit
-set guioptions-=T " Remove toolbar
-set vb t_vb= " No more beeps
-set nofoldenable
-set ttyfast
-" https://github.com/vim/vim/issues/1735#issuecomment-383353563
-set lazyredraw
-set synmaxcol=500
-set laststatus=2
-set relativenumber " Relative line numbers
-set number " Also show current absolute line
-set diffopt+=iwhite " No whitespace in vimdiff
-" Make diffing better: https://vimways.org/2018/the-power-of-diff/
-set diffopt+=algorithm:patience
-set diffopt+=indent-heuristic
-set showcmd " Show (partial) command in status line.
-set mouse=a " Enable mouse usage (all modes) in terminals
-set shortmess+=c " don't give |ins-completion-menu| messages.
-
-" =============================================================================
-" # Keyboard shortcuts
-" =============================================================================
-
 " Ctrl+h to stop searching
 vnoremap <C-h> :nohlsearch<cr>
 nnoremap <C-h> :nohlsearch<cr>
 
-" Jump to start and end of line using the home row keys
-map H ^
-map L $
-
-" Neat X clipboard integration
-" ,p will paste clipboard into buffer
-" ,c will copy entire buffer into clipboard
-noremap <leader>p :read !xsel --clipboard --output<cr>
-noremap <leader>c :w !xsel -ib<cr><cr>
-
-" <leader>s for Rg search
-noremap <leader>s :Rg
-let g:fzf_layout = { 'down': '~25%' }
-command! -bang -nargs=* Rg
-  \ call fzf#vim#grep(
-  \   'rg --column --line-number --no-heading --color=always '.shellescape(<q-args>), 1,
-  \   <bang>0 ? fzf#vim#with_preview('up:60%')
-  \           : fzf#vim#with_preview('right:50%:hidden', '?'),
-  \   <bang>0)
-
-function! s:list_cmd()
-  let base = fnamemodify(expand('%'), ':h:.:S')
-  return base == '.' ? 'fd --type file --follow' : printf('fd --type file --follow | proximity-sort %s', shellescape(expand('%')))
-endfunction
-
-command! -bang -nargs=? -complete=dir Files
-  \ call fzf#vim#files(<q-args>, {'source': s:list_cmd(),
-  \                               'options': '--tiebreak=index'}, <bang>0)
-
-
 " Open new file adjacent to current file
 nnoremap <leader>o :e <C-R>=expand("%:p:h") . "/" <CR>
 
-" No arrow keys --- force yourself to use the home row
+" No arrow keys
 nnoremap <up> <nop>
 nnoremap <down> <nop>
 inoremap <up> <nop>
@@ -371,16 +356,11 @@ inoremap <right> <nop>
 nnoremap <left> :bp<CR>
 nnoremap <right> :bn<CR>
 
-" <leader><leader> toggles between buffers
-nnoremap <leader><leader> <c-^>
+" Jump to start and end of line using the home row keys
+map H ^
+map L $
 
-" <leader>, shows/hides hidden characters
-nnoremap <leader>, :set invlist<cr>
-
-" <leader>q shows stats
-nnoremap <leader>q g<c-g>
-
-" I can type :help on my own, thanks.
+" Disable F1
 map <F1> <Esc>
 imap <F1> <Esc>
 
@@ -388,28 +368,25 @@ imap <F1> <Esc>
 nmap <C-_> gcc
 vmap <C-_> gc
 
-" =============================================================================
-" # Autocommands
-" =============================================================================
-
-" Leave paste mode when leaving insert mode
-autocmd InsertLeave * set nopaste
+" Set updatetime for CursorHold
+" 300ms of no cursor movement to trigger CursorHold
+set updatetime=300
+" Show diagnostic popup on cursor hold
+autocmd CursorHold * lua vim.diagnostic.open_float(nil, { focusable = false })
+autocmd BufWritePre *.rs lua vim.lsp.buf.formatting_sync(nil, 200)
 
 " Highlight yanked text
 autocmd TextYankPost * silent! lua vim.highlight.on_yank()
-
-" Enable type inlay hints
-autocmd CursorHold,CursorHoldI *.rs :lua require'lsp_extensions'.inlay_hints{ only_current_line = true }
 
 " Rainbow Parentheses
 autocmd Syntax * RainbowParenthesesLoadRound
 autocmd Syntax * RainbowParenthesesLoadSquare
 autocmd Syntax * RainbowParenthesesLoadBraces
 autocmd Syntax * RainbowParenthesesLoadChevrons
-map <F1> :RainbowParenthesesToggle<cr>
 
-" Toggle NvimTree when entering Vim
-autocmd VimEnter * NvimTreeToggle
+map <F1> :RainbowParenthesesToggle<cr>
+map <F2> :NvimTreeToggle<cr>
 
 " :q closes all buffers
 ca q qall
+

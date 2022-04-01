@@ -15,7 +15,10 @@ call plug#begin()
     Plug 'vim-scripts/delimitMate.vim'
     Plug 'lukas-reineke/indent-blankline.nvim'
     Plug 'noib3/nvim-cokeline'    
+    " Plug 'akinsho/bufferline.nvim' try this one instead of cokeline
     Plug 'folke/which-key.nvim'
+    Plug 'airblade/vim-rooter'
+    " Plug 'nvim-telescope/telescope-ui-select.nvim'
 
     function! UpdateRemotePlugins(...)
       " Needed to refresh runtime files
@@ -65,8 +68,33 @@ call wilder#set_option('renderer', wilder#wildmenu_renderer({
 lua <<EOF
 local nvim_lsp = require'lspconfig'
 
-require("which-key").setup {
+vim.cmd [[]]
+
+require("indent_blankline").setup {
+    --space_char_blankline = " ",
+    char_highlight_list = {
+        "IndentBlanklineIndent1"
+    }
 }
+
+--require("which-key").setup {
+--}
+local wk = require("which-key")
+-- As an example, we will create the following mappings:
+--  * <leader>ff find files
+--  * <leader>fr show recent files
+--  * <leader>fb Foobar
+-- we'll document:
+--  * <leader>fn new file
+--  * <leader>fe edit file
+-- and hide <leader>1
+
+wk.register({
+  f = {
+    name = "file", -- optional group name
+    f = { "<cmd>Telescope find_files<cr>", "Find File" }, -- create a binding with label
+  },
+}, { prefix = "<leader>" })
 
 local opts = {
     tools = { -- rust-tools options
@@ -76,6 +104,7 @@ local opts = {
             show_parameter_hints = false,
             parameter_hints_prefix = "",
             other_hints_prefix = "",
+            highlight = "Comment",
         },
     },
 
@@ -186,17 +215,6 @@ require('cokeline').setup({
     },
   },
 })
---require('cokeline').setup({
---  sidebar = {
---    filetype = 'NvimTree',
---    components = {
---      {
---        text = '  NvimTree',
---        style = 'bold',
---      },
---    },
---  },
---})
 
 require('nvim-tree').setup({
 	diagnostics = {
@@ -247,9 +265,14 @@ EOF
 
 " Colors!
 set termguicolors
-set background=dark
 let base16colorspace=256
 colorscheme base16-gruvbox-dark-hard
+highlight clear SignColumn
+highlight clear LineNr
+highlight LineNr guifg=grey
+" highlight CursorLineNr guifg=grey
+highlight IndentBlanklineIndent1 guifg=#333333 gui=nocombine
+" highlight TabLineFill guibg=#333333 gui=nocombine
 
 " Customize the highlight a bit.
 " Make it clearly visible which argument we're at.
@@ -343,6 +366,10 @@ nnoremap <C-h> :nohlsearch<cr>
 
 " Open new file adjacent to current file
 nnoremap <leader>o :e <C-R>=expand("%:p:h") . "/" <CR>
+
+" Telescope mappings
+nnoremap <leader>ff <cmd>Telescope find_files<cr>
+nnoremap <leader>fb <cmd>Telescope buffers<cr>
 
 " No arrow keys
 nnoremap <up> <nop>

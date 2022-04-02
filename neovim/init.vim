@@ -14,19 +14,20 @@ call plug#begin()
     Plug 'kyazdani42/nvim-web-devicons'
     Plug 'vim-scripts/delimitMate.vim'
     Plug 'lukas-reineke/indent-blankline.nvim'
-    Plug 'noib3/nvim-cokeline'    
-    " Plug 'akinsho/bufferline.nvim' try this one instead of cokeline
+     Plug 'noib3/nvim-cokeline'
+    " Plug 'akinsho/bufferline.nvim'
     Plug 'folke/which-key.nvim'
     Plug 'airblade/vim-rooter'
     " Plug 'nvim-telescope/telescope-ui-select.nvim'
+    Plug 'jeffkreeftmeijer/vim-numbertoggle'
 
     function! UpdateRemotePlugins(...)
       " Needed to refresh runtime files
       let &rtp=&rtp
       UpdateRemotePlugins
     endfunction
-    Plug 'gelguy/wilder.nvim', { 'do': function('UpdateRemotePlugins') }    
-    
+    Plug 'gelguy/wilder.nvim', { 'do': function('UpdateRemotePlugins') }
+
     Plug 'neovim/nvim-lspconfig'
 
     " Completion framework
@@ -42,8 +43,6 @@ call plug#begin()
     Plug 'hrsh7th/cmp-path'
     Plug 'hrsh7th/cmp-buffer'
 
-    " See hrsh7th's other plugins for more completion sources!
-
     " To enable more of the features of rust-analyzer, such as inlay hints and more!
     Plug 'simrat39/rust-tools.nvim'
 
@@ -51,7 +50,6 @@ call plug#begin()
     Plug 'hrsh7th/vim-vsnip'
 
     " Fuzzy finder
-    " Optional
     Plug 'nvim-lua/popup.nvim'
     Plug 'nvim-lua/plenary.nvim'
     Plug 'nvim-telescope/telescope.nvim'
@@ -67,8 +65,6 @@ call wilder#set_option('renderer', wilder#wildmenu_renderer({
 " See https://github.com/simrat39/rust-tools.nvim#configuration
 lua <<EOF
 local nvim_lsp = require'lspconfig'
-
-vim.cmd [[]]
 
 require("indent_blankline").setup {
     --space_char_blankline = " ",
@@ -90,9 +86,15 @@ local wk = require("which-key")
 -- and hide <leader>1
 
 wk.register({
+  b = {
+    name = "Buffer",
+    b = { "<cmd>Telescope buffers<cr>", "List open buffers" },
+    d = { "<cmd>bd<cr>", "Close buffer"}
+  },
   f = {
-    name = "file", -- optional group name
-    f = { "<cmd>Telescope find_files<cr>", "Find File" }, -- create a binding with label
+    name = "File", -- group name
+    o = { "<cmd> e <C-R>=expand(\"%:p:h\") . \"/\" <cr>", "Open new adjacent file"},
+    f = { "<cmd>Telescope find_files<cr>", "Find file" },
   },
 }, { prefix = "<leader>" })
 
@@ -103,7 +105,7 @@ local opts = {
         inlay_hints = {
             show_parameter_hints = false,
             parameter_hints_prefix = "",
-            other_hints_prefix = "",
+            other_hints_prefix = "≫ ",
             highlight = "Comment",
         },
     },
@@ -113,7 +115,7 @@ local opts = {
     -- see https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#rust_analyzer
     server = {
         -- on_attach is a callback called when the language server attachs to the buffer
-        -- on_attach = on_attach,
+        on_attach = on_attach,
         settings = {
             -- to enable rust-analyzer settings visit:
             -- https://github.com/rust-analyzer/rust-analyzer/blob/master/docs/user/generated_config.adoc
@@ -150,7 +152,7 @@ cmp.setup({
     ['<C-Space>'] = cmp.mapping.complete(),
     ['<C-e>'] = cmp.mapping.close(),
     -- Tab immediately completes. C-n/C-p to select.
-    ['<Tab>'] = cmp.mapping.confirm({ select = true })    
+    ['<Tab>'] = cmp.mapping.confirm({ select = true })
   },
 
   -- Installed sources
@@ -269,10 +271,12 @@ let base16colorspace=256
 colorscheme base16-gruvbox-dark-hard
 highlight clear SignColumn
 highlight clear LineNr
-highlight LineNr guifg=grey
-" highlight CursorLineNr guifg=grey
+highlight LineNr guifg=#665c54
 highlight IndentBlanklineIndent1 guifg=#333333 gui=nocombine
-" highlight TabLineFill guibg=#333333 gui=nocombine
+highlight TabLineFill guibg=g:terminal_color_background gui=nocombine
+highlight EndOfBuffer guifg=#1d2021 gui=nocombine
+highlight CursorLine guibg=#292929
+highlight CursorLineNr cterm=underline ctermfg=20 ctermbg=18 gui=bold guifg=#bdae93 guibg=#292929
 
 " Customize the highlight a bit.
 " Make it clearly visible which argument we're at.
@@ -287,8 +291,9 @@ set nofoldenable
 set ttyfast " https://github.com/vim/vim/issues/1735#issuecomment-383353563
 set synmaxcol=500
 set laststatus=2 " Always display status line
-set relativenumber " Relative line numbers
-set number " Also show current absolute line
+
+set number
+
 set showcmd " Show (partial) command in status line
 set scrolloff=2
 
@@ -365,11 +370,11 @@ vnoremap <C-h> :nohlsearch<cr>
 nnoremap <C-h> :nohlsearch<cr>
 
 " Open new file adjacent to current file
-nnoremap <leader>o :e <C-R>=expand("%:p:h") . "/" <CR>
+" nnoremap <leader>o :e <C-R>=expand("%:p:h") . "/" <CR>
 
 " Telescope mappings
-nnoremap <leader>ff <cmd>Telescope find_files<cr>
-nnoremap <leader>fb <cmd>Telescope buffers<cr>
+" nnoremap <leader>ff <cmd>Telescope find_files<cr>
+" nnoremap <leader>fb <cmd>Telescope buffers<cr>
 
 " No arrow keys
 nnoremap <up> <nop>
@@ -395,6 +400,9 @@ imap <F1> <Esc>
 nmap <C-_> gcc
 vmap <C-_> gc
 
+" Let Ctrl+C trigger InsertLeave event
+inoremap <C-c> <ESC>
+
 " Set updatetime for CursorHold
 " 300ms of no cursor movement to trigger CursorHold
 set updatetime=300
@@ -417,3 +425,5 @@ map <F2> :NvimTreeToggle<cr>
 " :q closes all buffers
 ca q qall
 
+" Trim trailing whitespaces on save
+autocmd BufWritePre * :%s/\s\+$//e

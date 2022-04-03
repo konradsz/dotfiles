@@ -14,7 +14,7 @@ call plug#begin()
     Plug 'kyazdani42/nvim-web-devicons'
     Plug 'vim-scripts/delimitMate.vim'
     Plug 'lukas-reineke/indent-blankline.nvim'
-     Plug 'noib3/nvim-cokeline'
+    Plug 'noib3/nvim-cokeline'
     " Plug 'akinsho/bufferline.nvim'
     Plug 'folke/which-key.nvim'
     Plug 'airblade/vim-rooter'
@@ -28,26 +28,10 @@ call plug#begin()
     endfunction
     Plug 'gelguy/wilder.nvim', { 'do': function('UpdateRemotePlugins') }
 
+
     Plug 'neovim/nvim-lspconfig'
-
-    " Completion framework
-    Plug 'hrsh7th/nvim-cmp'
-
-    " LSP completion source for nvim-cmp
-    Plug 'hrsh7th/cmp-nvim-lsp'
-
-    " Snippet completion source for nvim-cmp
-    Plug 'hrsh7th/cmp-vsnip'
-
-    " Other usefull completion sources
-    Plug 'hrsh7th/cmp-path'
-    Plug 'hrsh7th/cmp-buffer'
-
     " To enable more of the features of rust-analyzer, such as inlay hints and more!
     Plug 'simrat39/rust-tools.nvim'
-
-    " Snippet engine
-    Plug 'hrsh7th/vim-vsnip'
 
     " Fuzzy finder
     Plug 'nvim-lua/popup.nvim'
@@ -64,8 +48,6 @@ call wilder#set_option('renderer', wilder#wildmenu_renderer({
 " rust-tools will configure and enable certain LSP features for us.
 " See https://github.com/simrat39/rust-tools.nvim#configuration
 lua <<EOF
-local nvim_lsp = require'lspconfig'
-
 require("indent_blankline").setup {
     --space_char_blankline = " ",
     char_highlight_list = {
@@ -73,34 +55,32 @@ require("indent_blankline").setup {
     }
 }
 
---require("which-key").setup {
---}
-local wk = require("which-key")
--- As an example, we will create the following mappings:
---  * <leader>ff find files
---  * <leader>fr show recent files
---  * <leader>fb Foobar
--- we'll document:
---  * <leader>fn new file
---  * <leader>fe edit file
--- and hide <leader>1
-
-wk.register({
-  b = {
-    name = "Buffer",
-    b = { "<cmd>Telescope buffers<cr>", "List open buffers" },
-    d = { "<cmd>bd<cr>", "Close buffer"}
-  },
-  f = {
-    name = "File", -- group name
-    o = { "<cmd> e <C-R>=expand(\"%:p:h\") . \"/\" <cr>", "Open new adjacent file"},
-    f = { "<cmd>Telescope find_files<cr>", "Find file" },
-  },
-}, { prefix = "<leader>" })
+require("which-key").register({
+    b = {
+        name = "Buffer",
+        b = { "<cmd>Telescope buffers<cr>", "List open buffers" },
+        d = { "<cmd>bd<cr>", "Close buffer"}
+    },
+    r = {
+        name = "Rust",
+        r = { "<cmd>RustRunnables<cr>", "Runnables"},
+        t = { "<cmd>RustToggleInlayHints<cr>", "Toggle Inlay Hints"},
+        f = { "<cmd>lua vim.lsp.buf.formatting()<cr>", "Cargo fmt"},
+        c = { "<cmd>RustOpenCargo<cr>", "Open Cargo.toml"}
+    },
+    f = {
+        name = "File",
+        o = { "<cmd> e <C-R>=expand(\"%:p:h\") . \"/\" <cr>", "Open new adjacent file"},
+        f = { "<cmd>Telescope find_files<cr>", "Find file" },
+    },
+},
+{
+    prefix = "<leader>"
+})
 
 local opts = {
     tools = { -- rust-tools options
-        autoSetHints = true,
+        autoSetHints = false,
         hover_with_actions = true,
         inlay_hints = {
             show_parameter_hints = false,
@@ -136,38 +116,9 @@ local opts = {
 
 require('rust-tools').setup(opts)
 
-local cmp = require'cmp'
-cmp.setup({
-  -- Enable LSP snippets
-  snippet = {
-    expand = function(args)
-        vim.fn["vsnip#anonymous"](args.body)
-    end,
-  },
-  mapping = {
-    ['<C-p>'] = cmp.mapping.select_prev_item(),
-    ['<C-n>'] = cmp.mapping.select_next_item(),
-    ['<C-d>'] = cmp.mapping.scroll_docs(-4),
-    ['<C-f>'] = cmp.mapping.scroll_docs(4),
-    ['<C-Space>'] = cmp.mapping.complete(),
-    ['<C-e>'] = cmp.mapping.close(),
-    -- Tab immediately completes. C-n/C-p to select.
-    ['<Tab>'] = cmp.mapping.confirm({ select = true })
-  },
-
-  -- Installed sources
-  sources = {
-    { name = 'nvim_lsp' },
-    --{ name = 'vsnip' },
-    { name = 'path' },
-    --{ name = 'buffer' },
-  },
-})
-
 require('Comment').setup()
 
 local get_hex = require('cokeline/utils').get_hex
-
 require('cokeline').setup({
   sidebar = {
     filetype = 'NvimTree',
@@ -234,33 +185,33 @@ require('nvim-tree').setup({
 })
 
 require('lualine').setup {
-  options = {
-    icons_enabled = true,
-    theme = 'gruvbox-material',
-    component_separators = { left = '', right = ''},
-    section_separators = { left = '', right = ''},
-    disabled_filetypes = {},
-    always_divide_middle = true,
-    globalstatus = false,
-  },
-  sections = {
-    lualine_a = {'mode'},
-    lualine_b = {'branch', 'diff', 'diagnostics'},
-    lualine_c = {'filename'},
-    lualine_x = {'encoding', 'filetype'},
-    lualine_y = {'progress'},
-    lualine_z = {'location'}
-  },
-  inactive_sections = {
-    lualine_a = {},
-    lualine_b = {},
-    lualine_c = {'filename'},
-    lualine_x = {'location'},
-    lualine_y = {},
-    lualine_z = {}
-  },
-  tabline = {},
-  extensions = {'nvim-tree'}
+    options = {
+        icons_enabled = true,
+        theme = 'gruvbox-material',
+        component_separators = { left = '', right = ''},
+        section_separators = { left = '', right = ''},
+        disabled_filetypes = {},
+        always_divide_middle = true,
+        globalstatus = false,
+    },
+    sections = {
+        lualine_a = {'mode'},
+        lualine_b = {'branch', 'diff', 'diagnostics'},
+        lualine_c = {'filename'},
+        lualine_x = {'encoding', 'filetype'},
+        lualine_y = {'progress'},
+        lualine_z = {'location'}
+    },
+    inactive_sections = {
+        lualine_a = {},
+        lualine_b = {},
+        lualine_c = {'filename'},
+        lualine_x = {'location'},
+        lualine_y = {},
+        lualine_z = {}
+    },
+    tabline = {},
+    extensions = {'nvim-tree'}
 }
 
 EOF
@@ -308,9 +259,12 @@ set splitright
 set splitbelow
 
 " Decent wildmenu
-set wildmenu
-set wildmode=list:longest
-set wildignore=.hg,.svn,*~,*.png,*.jpg,*.gif,*.settings,Thumbs.db,*.min.js,*.swp,publish/*,intermediate/*,*.o,*.hi,Zend,vendor
+"set wildmenu
+"set wildmode=list:longest
+"set wildignore=.hg,.svn,*~,*.png,*.jpg,*.gif,*.settings,Thumbs.db,*.min.js,*.swp,publish/*,intermediate/*,*.o,*.hi,Zend,vendor
+
+" Use system clipboard
+set clipboard+=unnamedplus
 
 set shiftwidth=4
 set softtabstop=4
@@ -369,13 +323,6 @@ nnoremap <silent> g* g*zz
 vnoremap <C-h> :nohlsearch<cr>
 nnoremap <C-h> :nohlsearch<cr>
 
-" Open new file adjacent to current file
-" nnoremap <leader>o :e <C-R>=expand("%:p:h") . "/" <CR>
-
-" Telescope mappings
-" nnoremap <leader>ff <cmd>Telescope find_files<cr>
-" nnoremap <leader>fb <cmd>Telescope buffers<cr>
-
 " No arrow keys
 nnoremap <up> <nop>
 nnoremap <down> <nop>
@@ -400,6 +347,9 @@ imap <F1> <Esc>
 nmap <C-_> gcc
 vmap <C-_> gc
 
+" jj to escape insert mode
+imap jj <Esc>
+
 " Let Ctrl+C trigger InsertLeave event
 inoremap <C-c> <ESC>
 
@@ -422,8 +372,8 @@ autocmd Syntax * RainbowParenthesesLoadChevrons
 map <F1> :RainbowParenthesesToggle<cr>
 map <F2> :NvimTreeToggle<cr>
 
-" :q closes all buffers
-ca q qall
+" :q closes all windows
+"ca q qall
 
 " Trim trailing whitespaces on save
 autocmd BufWritePre * :%s/\s\+$//e

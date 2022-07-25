@@ -3,11 +3,14 @@ add_newline = true
 [cmd_duration]
 disabled = true
 
-[rust]
-disabled = true
-
 [package]
 disabled = true
 
 [directory]
 truncation_length = 8
+
+[env_var]
+variable = "MINIKUBE_ACTIVE_DOCKERD"
+symbol = "☸"
+style = "blue bold"
+format = "[$symbol]($style) "

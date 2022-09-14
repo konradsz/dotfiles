@@ -17,7 +17,7 @@ call plug#begin()
     Plug 'noib3/nvim-cokeline'
     " Plug 'akinsho/bufferline.nvim'
     Plug 'folke/which-key.nvim'
-    Plug 'airblade/vim-rooter'
+    "Plug 'airblade/vim-rooter'
     " Plug 'nvim-telescope/telescope-ui-select.nvim'
     Plug 'jeffkreeftmeijer/vim-numbertoggle'
 
@@ -32,6 +32,20 @@ call plug#begin()
     Plug 'neovim/nvim-lspconfig'
     " To enable more of the features of rust-analyzer, such as inlay hints and more!
     Plug 'simrat39/rust-tools.nvim'
+
+    " Completion framework
+    Plug 'hrsh7th/nvim-cmp'
+
+    " LSP completion source for nvim-cmp
+    Plug 'hrsh7th/cmp-nvim-lsp'
+
+    " Snippet completion source for nvim-cmp
+    Plug 'hrsh7th/cmp-vsnip'
+    Plug 'hrsh7th/vim-vsnip'
+
+    " Other usefull completion sources
+    Plug 'hrsh7th/cmp-path'
+    Plug 'hrsh7th/cmp-buffer'
 
     " Fuzzy finder
     Plug 'nvim-lua/popup.nvim'
@@ -66,7 +80,8 @@ require("which-key").register({
         r = { "<cmd>RustRunnables<cr>", "Runnables"},
         t = { "<cmd>RustToggleInlayHints<cr>", "Toggle Inlay Hints"},
         f = { "<cmd>lua vim.lsp.buf.formatting()<cr>", "Cargo fmt"},
-        c = { "<cmd>RustOpenCargo<cr>", "Open Cargo.toml"}
+        c = { "<cmd>RustOpenCargo<cr>", "Open Cargo.toml"},
+        d = { "<cmd>Telescope diagnostics<cr>", "Show Diagnostics"}
     },
     f = {
         name = "File",
@@ -115,6 +130,40 @@ local opts = {
 }
 
 require('rust-tools').setup(opts)
+
+-- setup completion
+local cmp = require'cmp'
+cmp.setup({
+  -- Enable LSP snippets
+  snippet = {
+    expand = function(args)
+        vim.fn["vsnip#anonymous"](args.body)
+    end,
+  },
+  mapping = {
+    ['<C-p>'] = cmp.mapping.select_prev_item(),
+    ['<C-n>'] = cmp.mapping.select_next_item(),
+    -- Add tab support
+    ['<S-Tab>'] = cmp.mapping.select_prev_item(),
+    ['<Tab>'] = cmp.mapping.select_next_item(),
+    ['<C-d>'] = cmp.mapping.scroll_docs(-4),
+    ['<C-f>'] = cmp.mapping.scroll_docs(4),
+    ['<C-Space>'] = cmp.mapping.complete(),
+    ['<C-e>'] = cmp.mapping.close(),
+    ['<CR>'] = cmp.mapping.confirm({
+      behavior = cmp.ConfirmBehavior.Insert,
+      select = true,
+    })
+  },
+
+  -- Installed sources
+  sources = {
+    { name = 'nvim_lsp' },
+    --{ name = 'vsnip' },
+    { name = 'path' },
+    { name = 'buffer' },
+  },
+})
 
 require('Comment').setup()
 

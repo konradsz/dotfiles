@@ -1,11 +1,10 @@
+set fish_greeting
+
 alias vim="nvim"
 alias l="exa"
 alias ls="exa"
-alias ll="exa -l"
-alias la="exa -la"
-aliast cat="bat"
-
-set fish_greeting
+alias ll="exa -l --icons"
+alias la="exa -la --icons"
+alias cat="bat"
 
 starship init fish | source
-

@@ -8,3 +8,4 @@ alias la="exa -la --icons"
 alias cat="bat"
 
 starship init fish | source
+zoxide init fish | source
